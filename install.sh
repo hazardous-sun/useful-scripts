@@ -18,12 +18,23 @@ removePreviousVersion() {
 install() {
     removePreviousVersion $1
     echo "Installing $1"
-    sudo cp "$(pwd)/$1 /opt/useful-scripts"
-    sudo chown $USER:$USER "/opt/$1"
-    sudo ln -s "/opt/$1" "/usr/bin/"
+    cp "$(pwd)/$1 /opt/useful-scripts"
+    chown $USER:$USER "/opt/$1"
+    ln -s "/opt/$1" "/usr/bin/"
+}
+
+checkPermissions() {
+    if [ "$(id -u)" != "0" ]; then
+        echo "Please run the script with sudo"
+        exit 1
+    fi
 }
 
 main() {
+    checkPermissions
+
+    mkdir /opt/useful-scripts
+
     directories=()
     for file in *; do
         if $file == "install.sh"; then
