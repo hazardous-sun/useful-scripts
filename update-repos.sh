@@ -1,5 +1,10 @@
 #!/usr/bin/bash
 
+# Pulls the latest changes from all git repositories inside a "Projects" directory that
+# the user specify.
+# If no directory path is passed, the script will look for git repositories inside the 
+# "$HOME/Projects/" directory.
+
 PROJECTS="$HOME/Projects/"
 uncommitedDirectories=()
 directoriesConflicting=()
@@ -39,7 +44,7 @@ printUsage() {
 
 setProjectsDir() {
     # Check if the user passed a 'Projects' directory
-    if $# > 1; then
+    if [ $# -ne 0 ]; then
         $PROJECTS = "$PROJECTS/$1"
     
         # Check if $PROJECTS directory exists
@@ -54,16 +59,21 @@ setProjectsDir() {
 }
 
 main() {
+    # Check if user passed a "Projects" directory
+    setProjectsDir
+
     # CD into Projects directory
     cd $PROJECTS
 
-    # iterate over directories inside $HOME/Projects/
+    # Iterate over directories inside $HOME/Projects/
     for dir in */; do
+        echo "cd $PROJECTS$dir"
         # CD into dir
-        cd "$PROJECTS/$dir"
+        cd "$PROJECTS$dir"
   
-        # check if $dir is a git directory 
-        if [[ $(git rev-parse --is-inside-work-tree) == 0 ]]; then
+        # Check if $dir is a git directory 
+        if [[ $(git rev-parse --is-inside-work-tree) == "true" ]]; then
+            echo "Pulling changes"
             pullChanges
         fi
     done
