@@ -4,13 +4,9 @@
 # Expects 1 parameter, the name of the script that should be removed
 removePreviousVersion() {
     # CD into /opt/
-    pushd /opt/useful-scripts
-    
     echo "Removing previous version of $1..."
-    rm $1
-    break
-
-    popd
+    rm "/opt/useful-scripts/$1"
+    rm "/usr/bin/$1"
 }
 
 # Installs the script
@@ -18,9 +14,15 @@ removePreviousVersion() {
 install() {
     removePreviousVersion $1
     echo "Installing $1"
-    cp "$(pwd)/$1 /opt/useful-scripts"
-    chown $USER:$USER "/opt/$1"
-    ln -s "/opt/$1" "/usr/bin/"
+    
+    # Copy file to /opt/useful-scripts/
+    cp "$(pwd)/$1" "/opt/useful-scripts/"
+    chown "$USER":"$USER" "/opt/useful-scripts/$1"
+
+    # Create a symbolinc reference in /usr/bin/
+    ln -s "/opt/useful-scripts/$1" "/usr/bin/"
+    chown "$USER":"$USER" "/usr/bin/$1"
+    chmod +x "/usr/bin/$1"
 }
 
 checkPermissions() {
@@ -32,12 +34,14 @@ checkPermissions() {
 
 main() {
     checkPermissions
-
+    
+    echo "Updating /opt/useful-scripts"
+    rm -r /opt/useful-scripts/ 
     mkdir /opt/useful-scripts
 
     directories=()
     for file in *; do
-        if $file == "install.sh"; then
+        if [[ $file == "install.sh" ]]; then
             continue
         elif [ -f $file ]; then
             install $file
