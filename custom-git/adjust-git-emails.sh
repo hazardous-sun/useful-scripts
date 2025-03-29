@@ -26,3 +26,5 @@ main() {
         echo "Finished rebasing"
     fi
 }
+
+main
