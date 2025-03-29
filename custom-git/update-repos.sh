@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # Pulls the latest changes from all git repositories inside a "Projects" directory that
 # the user specify.
