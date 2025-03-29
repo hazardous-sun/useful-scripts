@@ -1,31 +1,51 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
-# Check if exactly two arguments are provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <search_string> <prefix>"
-    exit 1
-fi
+# This script renames files by adding a prefix to filenames matching a search string.
 
-# Assign arguments to variables
-search_string="$1"
-prefix="$2"
-
-# Iterate over all files in the current directory
-for file in *; do
-    # Skip if it's not a regular file
-    if [ ! -f "$file" ]; then
-        continue
+main() {
+    # Check if exactly two arguments are provided
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: $0 <search_string> <prefix>" >&2
+        exit 1
     fi
-
-    # Check if the filename contains the search string (case-sensitive)
-    if [[ "$file" == *"$search_string"* ]]; then
-        # Check if the filename already starts with the prefix
-        if [[ "$file" != "${prefix}"* ]]; then
-            # Rename the file by prepending the prefix
-            mv "$file" "${prefix}${file}"
-            echo "Renamed '$file' to '${prefix}${file}'"
-        else
-            echo "Skipping '$file' (already starts with '$prefix')"
+    
+    local search_string="$1"
+    local prefix="$2"
+    
+    # Check if the prefix contains invalid filename characters
+    if [[ "$prefix" =~ [/\\:\*\?""<>|] ]]; then
+        echo "Error: Prefix contains invalid filename characters." >&2
+        exit 1
+    fi
+    
+    # Iterate over files (nullglob avoids issues if no files match)
+    shopt -s nullglob
+    for file in *; do
+        # Skip if not a regular file (directories, symlinks, etc.)
+        [ ! -f "$file" ] && continue
+        
+        # Check if filename contains the search string (case-sensitive)
+        if [[ "$file" == *"$search_string"* ]]; then
+            # Skip if already prefixed
+            if [[ "$file" != "${prefix}"* ]]; then
+                # Check if target filename already exists
+                if [ -e "${prefix}${file}" ]; then
+                    echo "Error: '${prefix}${file}' already exists. Skipping '$file'." >&2
+                    continue
+                fi
+                
+                # Rename the file
+                if mv -- "$file" "${prefix}${file}"; then
+                    echo "Renamed '$file' to '${prefix}${file}'"
+                else
+                    echo "Error: Failed to rename '$file'." >&2
+                fi
+            else
+                echo "Skipping '$file' (already starts with '$prefix')"
+            fi
         fi
-    fi
-done
+    done
+    shopt -u nullglob  # Reset nullglob
+}
+
+main "$@"
