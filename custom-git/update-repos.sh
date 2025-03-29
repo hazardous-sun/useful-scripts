@@ -6,20 +6,23 @@
 # "$HOME/Projects/" directory.
 
 PROJECTS="$HOME/Projects/"
+WARNING="\033[33m"
+ERROR="\033[31m"
+NC="\033[0m"
 
 printMissingActions() {
     local uncommitted=("${!1}")
     local conflicting=("${!2}")
 
     if [ ${#uncommitted[@]} -ne 0 ]; then
-        echo -e "\033[33mThe following directories contain uncommitted changes:\033[0m"
+        echo -e "${WARNING}The following directories contain uncommitted changes:${NC}"
         for dir in "${uncommitted[@]}"; do
             echo "$dir"
         done
     fi
 
     if [ ${#conflicting[@]} -ne 0 ]; then
-        echo -e "\033[31mThe following directories had conflicts when pulling:\033[0m"
+        echo -e "${ERROR}The following directories had conflicts when pulling:${NC}"
         for dir in "${conflicting[@]}"; do
             echo "$dir"
         done
