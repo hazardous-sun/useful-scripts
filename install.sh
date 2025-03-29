@@ -1,28 +1,40 @@
 #!/usr/bin/bash
 
 # Removes the previous version of the script inside /opt/
-# Expects 1 parameter, the name of the script that should be removed
+# Expects 1 parameter, the path to the script that should be removed
 removePreviousVersion() {
-    # CD into /opt/
-    echo "Removing previous version of $1..."
-    rm "/opt/useful-scripts/$1"
-    rm "/usr/bin/$1"
+    local script_path="$1"
+    local script_name="$(basename "$script_path")"
+    
+    echo "Removing previous version of $script_name..."
+    rm -f "$script_path"
+    rm -f "/usr/bin/$script_name"
 }
 
 # Installs the script
-# Expects 1 parameter, the name of the script that should be installed
-install() {
-    removePreviousVersion $1
-    echo "Installing $1"
+# Expects 2 parameters:
+# 1 - source path to the script
+# 2 - destination directory path (without script filename)
+installScript() {
+    local source_path="$1"
+    local dest_dir="$2"
+    local script_name="$(basename "$source_path")"
+    local dest_path="$dest_dir/$script_name"
     
-    # Copy file to /opt/useful-scripts/
-    cp "$(pwd)/$1" "/opt/useful-scripts/"
-    chown "$USER":"$USER" "/opt/useful-scripts/$1"
+    removePreviousVersion "$dest_path"
+    echo "Installing $script_name to $dest_dir"
+    
+    # Create destination directory if it doesn't exist
+    mkdir -p "$dest_dir"
+    
+    # Copy file to destination
+    cp "$source_path" "$dest_dir/"
+    chown "$USER":"$USER" "$dest_path"
+    chmod +x "$dest_path"
 
-    # Create a symbolinc reference in /usr/bin/
-    ln -s "/opt/useful-scripts/$1" "/usr/bin/"
-    chown "$USER":"$USER" "/usr/bin/$1"
-    chmod +x "/usr/bin/$1"
+    # Create a symbolic reference in /usr/bin/
+    ln -sf "$dest_path" "/usr/bin/"
+    chown "$USER":"$USER" "/usr/bin/$script_name"
 }
 
 checkPermissions() {
@@ -35,20 +47,21 @@ checkPermissions() {
 main() {
     checkPermissions
     
-    echo "Updating /opt/useful-scripts"
-    rm -r /opt/useful-scripts/ 
-    mkdir /opt/useful-scripts
-
-    directories=()
-    for file in *; do
-        if [[ $file == "install.sh" ]]; then
-            continue
-        elif [ -f $file ]; then
-            install $file
-        else 
-            $directories+=$file
-        fi
+    echo "Updating scripts in /opt"
+    
+    # Process each directory and file
+    find . -type f -name "*.sh" ! -name "install.sh" | while read -r script_path; do
+        # Remove leading './' from path
+        relative_path="${script_path#./}"
+        
+        # Get destination directory by removing the script filename
+        dest_dir="/opt/useful-scripts/$(dirname "$relative_path")"
+        
+        installScript "$script_path" "$dest_dir"
     done
+    
+    echo "Installation complete"
 }
 
 main
+
