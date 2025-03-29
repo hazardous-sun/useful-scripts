@@ -61,7 +61,7 @@ setProjectsDir() {
     
         # Check if $PROJECTS directory exists
         if [ ! -d "$PROJECTS" ]; then
-            echo "error: directory $PROJECTS does not exist"
+            echo -e "${ERROR}error: directory $PROJECTS does not exist${NC}"
             printUsage
             exit 1
         fi
