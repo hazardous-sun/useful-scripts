@@ -4,6 +4,18 @@ PROJECTS="$HOME/Projects/"
 uncommitedDirectories=()
 directoriesConflicting=()
 
+printMissingActions() {
+    echo "The following directories contain uncommitted changes:"
+    for dir in uncommitedDirectories; do
+        echo "$PROJECTS/$dir"
+    done
+    
+    echo "The following directories had conflicts when pulling:"
+    for dir in directoriesConflicting; do
+        echo "$PROJECTS/$dir"
+    done
+}
+
 pullChanges() {
     # Check for uncommitted changes
     if [[ -n $(git status --porcelain) ]]; then # there are uncommitted changes Append $dir to the list of uncommitted directories 
@@ -19,16 +31,26 @@ pullChanges() {
     fi
 }
 
-printMissingActions() {
-    echo "The following directories contain uncommitted changes:"
-    for dir in uncommitedDirectories; do
-        echo "$PROJECTS/$dir"
-    done
+printUsage() {
+    echo "update-repos [PATH]"
+    echo "Miscelaneous:"
+    echo "    -h --help \t Displays the program usage"
+}
+
+setProjectsDir() {
+    # Check if the user passed a 'Projects' directory
+    if $# > 1; then
+        $PROJECTS = "$PROJECTS/$1"
     
-    echo "The following directories had conflicts when pulling:"
-    for dir in directoriesConflicting; do
-        echo "$PROJECTS/$dir"
-    done
+        # Check if $PROJECTS directory exists
+        if [ -d $PROJECTS ]; then
+            echo "Projects directory set to '$PROJECTS'"
+        else
+            echo "error: directory $PROJECTS does not exist"
+            printUsage
+            exit 1
+        fi
+    fi
 }
 
 main() {
