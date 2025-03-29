@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # Removes the previous version of the script inside /opt/
 # Expects 1 parameter, the path to the script that should be removed
