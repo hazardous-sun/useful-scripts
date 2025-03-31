@@ -8,7 +8,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color (reset)
 
 # Default installation path
-defaultInstallPath="/opt/useful-scripts/"
+DEFAULT_INSTALL_PATH="/opt/useful-scripts/"
 
 # Check if script is run with sudo
 checkPermissions() {
@@ -20,120 +20,116 @@ checkPermissions() {
 
 # Get installation directory from user
 getInstallPath() {
-    echo -e "${CYAN}Where are the scripts installed? Leave blank for default (default='${defaultInstallPath}')${NC}"
+    echo -e "${CYAN}Enter the directory where scripts are installed (leave blank for default '${DEFAULT_INSTALL_PATH}'):${NC}"
     read -r -p "> " userInput
 
-    if [[ "$userInput" != "" ]]; then
+    if [[ -z "$userInput" ]]; then
+        INSTALL_PATH="$DEFAULT_INSTALL_PATH"
+    else
         # Ensure path ends with /
         [[ "$userInput" != */ ]] && userInput="$userInput/"
-        echo "$userInput"
-    else
-        echo "$defaultInstallPath"
+        INSTALL_PATH="$userInput"
+    fi
+
+    echo -e "${CYAN}Using installation path: ${YELLOW}'${INSTALL_PATH}'${NC}"
+    
+    if [ ! -d "$INSTALL_PATH" ]; then
+        echo -e "${RED}Error: Directory '$INSTALL_PATH' does not exist${NC}"
+        exit 1
     fi
 }
 
-# List all installed scripts and prompt for removal
-uninstallScripts() {
-    local installPath="$1"
-    
-    if [ ! -d "$installPath" ]; then
-        echo -e "${RED}Error: Directory '$installPath' does not exist${NC}"
-        exit 1
-    fi
-
-    # Find all scripts in the installation directory
+# List installed scripts and get user selection
+selectScriptsToRemove() {
     local scripts=()
+    local options=()
+    local count=1
+
+    echo -e "${CYAN}Finding installed scripts...${NC}"
+    
+    # Find all .sh files in installation directory
     while IFS= read -r -d $'\0' script; do
         scripts+=("$script")
-    done < <(find "$installPath" -type f -name "*.sh" -print0)
+        script_name=$(basename "$script")
+        options+=("$count" "$script_name" "off")
+        ((count++))
+    done < <(find "$INSTALL_PATH" -type f -name "*.sh" -print0)
 
     if [ ${#scripts[@]} -eq 0 ]; then
-        echo -e "${YELLOW}No scripts found in '$installPath'${NC}"
+        echo -e "${YELLOW}No scripts found in '$INSTALL_PATH'${NC}"
         exit 0
     fi
 
-    echo -e "${CYAN}Found the following installed scripts:${NC}"
-    for i in "${!scripts[@]}"; do
-        echo -e "${YELLOW}$((i+1)). ${scripts[$i]}${NC}"
-    done
+    # Add "All" option
+    options+=("$count" "All scripts" "off")
 
-    echo -e "\n${CYAN}Select scripts to uninstall (comma-separated numbers), 'a' for all, or 'q' to quit${NC}"
-    read -r -p "> " selection
+    # Show selection dialog
+    echo -e "${CYAN}Select scripts to uninstall:${NC}"
+    choices=$(whiptail --title "Script Uninstaller" --checklist \
+        "Choose scripts to uninstall:" 20 60 10 \
+        "${options[@]}" 3>&1 1>&2 2>&3) || exit
 
-    case "$selection" in
-        [aA])
-            removeAllScripts "$installPath" "${scripts[@]}"
-            ;;
-        [qQ])
-            echo -e "${GREEN}Quitting without changes${NC}"
-            exit 0
-            ;;
-        *)
-            removeSelectedScripts "$selection" "$installPath" "${scripts[@]}"
-            ;;
-    esac
-}
-
-# Remove all scripts
-removeAllScripts() {
-    local installPath="$1"
-    shift
-    local scripts=("$@")
-    
-    echo -e "${RED}Removing all scripts...${NC}"
-    for script in "${scripts[@]}"; do
-        removeScript "$script" "$installPath"
-    done
-    
-    # Remove installation directory if empty
-    if [ -z "$(ls -A "$installPath")" ]; then
-        echo -e "${CYAN}Removing empty directory '$installPath'${NC}"
-        rmdir "$installPath"
+    # Process user choices
+    if [[ -z "$choices" ]]; then
+        echo -e "${YELLOW}No scripts selected for removal. Exiting.${NC}"
+        exit 0
     fi
-    
-    echo -e "${GREEN}All scripts have been uninstalled${NC}"
+
+    # Convert choices to array
+    IFS=' ' read -ra selected_indices <<< "$choices"
+
+    # Check if "All" was selected (last option)
+    for index in "${selected_indices[@]}"; do
+        if [[ "$index" == "\"$count\"" ]]; then
+            SELECTED_SCRIPTS=("${scripts[@]}")
+            return
+        fi
+    done
+
+    # Get selected scripts
+    for index in "${selected_indices[@]}"; do
+        # Remove quotes and convert to zero-based index
+        idx=${index//\"}
+        idx=$((idx-1))
+        SELECTED_SCRIPTS+=("${scripts[$idx]}")
+    done
 }
 
 # Remove selected scripts
-removeSelectedScripts() {
-    local selection="$1"
-    local installPath="$2"
-    shift 2
-    local scripts=("$@")
-    local IFS=',' read -ra selections <<< "$selection"
-    
-    for sel in "${selections[@]}"; do
-        # Validate input
-        if ! [[ "$sel" =~ ^[0-9]+$ ]] || [ "$sel" -lt 1 ] || [ "$sel" -gt "${#scripts[@]}" ]; then
-            echo -e "${RED}Invalid selection: '$sel'${NC}"
-            continue
-        fi
+removeScripts() {
+    for script in "${SELECTED_SCRIPTS[@]}"; do
+        script_name=$(basename "$script")
+        symlink_path="/usr/bin/$script_name"
+
+        echo -e "${CYAN}Removing $script_name...${NC}"
         
-        local idx=$((sel-1))
-        removeScript "${scripts[$idx]}" "$installPath"
+        # Remove script file
+        rm -f "$script"
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}Removed: $script${NC}"
+        else
+            echo -e "${RED}Failed to remove: $script${NC}"
+        fi
+
+        # Remove symlink if exists
+        if [[ -L "$symlink_path" ]]; then
+            rm -f "$symlink_path"
+            if [[ $? -eq 0 ]]; then
+                echo -e "${GREEN}Removed symlink: $symlink_path${NC}"
+            else
+                echo -e "${RED}Failed to remove symlink: $symlink_path${NC}"
+            fi
+        fi
     done
-    
-    # Remove installation directory if empty
-    if [ -z "$(ls -A "$installPath")" ]; then
-        echo -e "${CYAN}Removing empty directory '$installPath'${NC}"
-        rmdir "$installPath"
-    fi
-    
-    echo -e "${GREEN}Selected scripts have been uninstalled${NC}"
 }
 
-# Remove a single script
-removeScript() {
-    local scriptPath="$1"
-    local installPath="$2"
-    local scriptName="$(basename "$scriptPath")"
+main() {
+    checkPermissions
+    getInstallPath
+    selectScriptsToRemove
+    removeScripts
     
-    echo -e "${CYAN}Removing $scriptName...${NC}"
-    
-    # Remove the script file
-    rm -f "$scriptPath"
-    echo -e "${GREEN}Removed: $scriptPath${NC}"
-    
-    # Remove the symlink from /usr/bin/
-    rm -f "/usr/bin/$scriptName"
-    echo -e "${GREEN}Rem
+    echo -e "${GREEN}Uninstallation complete${NC}"
+}
+
+main
