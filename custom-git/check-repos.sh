@@ -36,6 +36,11 @@ pullChanges() {
     if [[ -n $(git status --porcelain) ]]; then
         return 1
     fi
+
+    # Check for changes commited but not yet pushed
+    if [ -n "$(git cherry -v)" ]; then
+        return 2
+    fi
     
     return 0
 }
