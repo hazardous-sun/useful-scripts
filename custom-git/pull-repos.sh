@@ -8,6 +8,7 @@
 PROJECTS="$HOME/Projects/"
 WARNING="\033[33m"
 ERROR="\033[31m"
+INFO='\033[0;36m'
 NC="\033[0m"
 
 printMissingActions() {
@@ -17,14 +18,14 @@ printMissingActions() {
     if [ ${#uncommitted[@]} -ne 0 ]; then
         echo -e "${WARNING}The following directories contain uncommitted changes:${NC}"
         for dir in "${uncommitted[@]}"; do
-            echo "$dir"
+            echo -e "${WARNING}$dir${NC}"
         done
     fi
 
     if [ ${#conflicting[@]} -ne 0 ]; then
         echo -e "${ERROR}The following directories had conflicts when pulling:${NC}"
         for dir in "${conflicting[@]}"; do
-            echo "$dir"
+            echo "${ERROR}$dir${NC}"
         done
     fi
 }
@@ -39,7 +40,7 @@ pullChanges() {
     # Try to pull changes
     if ! git pull --quiet; then
         branch=$(git symbolic-ref --short HEAD)
-        echo "aborting merge..."
+        echo -e "${ERROR}aborting merge...${NC}"
         git merge --abort
         return 2
     fi
@@ -65,7 +66,7 @@ setProjectsDir() {
             printUsage
             exit 1
         fi
-        echo "Projects directory set to '$PROJECTS'"
+        echo "${INFO}Projects directory set to '$PROJECTS'${NC}"
     fi
 }
 
@@ -74,7 +75,7 @@ main() {
     setProjectsDir "$@"
 
     # CD into Projects directory
-    cd "$PROJECTS" || { echo "Failed to cd to $PROJECTS"; exit 1; }
+    cd "$PROJECTS" || { echo -e "${ERROR}error: failed to cd to $PROJECTS${NC}"; exit 1; }
 
     # Variables for controlling errors
     uncommittedDirectories=()
@@ -83,10 +84,10 @@ main() {
     # Iterate over directories inside $PROJECTS
     for dir in */; do
         [ -d "$dir" ] || continue  # Skip if not a directory
-        echo "Checking $dir"
+        echo -e "${INFO}Checking $dir${NC}"
         
         # CD into dir
-        cd "$dir" || { echo "Failed to enter $dir"; continue; }
+        cd "$dir" || { echo -e "${ERROR}error: failed to enter $dir${NC}"; continue; }
   
         # Check if $dir is a git directory 
         if git rev-parse --is-inside-work-tree &>/dev/null; then
@@ -96,7 +97,7 @@ main() {
                 2) directoriesConflicting+=("$(pwd)") ;;
             esac
         else
-            echo "$dir is not a git repository"
+            echo -e "${WARNING}$dir is not a git repository${NC}"
         fi
         
         # Return to Projects directory
