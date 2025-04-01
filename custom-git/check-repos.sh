@@ -8,12 +8,13 @@
 PROJECTS="$HOME/Projects/"
 WARNING="\033[33m"
 ERROR="\033[31m"
+NOT_PUSHED="\033[38;5;190m"
 INFO='\033[0;36m'
 NC="\033[0m"
 
 printMissingActions() {
     local uncommitted=("${!1}")
-    local conflicting=("${!2}")
+    local notPushed=("${!2}")
 
     if [ ${#uncommitted[@]} -ne 0 ]; then
         echo -e "${WARNING}The following directories contain uncommitted changes:${NC}"
@@ -22,10 +23,10 @@ printMissingActions() {
         done
     fi
 
-    if [ ${#conflicting[@]} -ne 0 ]; then
-        echo -e "${ERROR}The following directories had conflicts when pulling:${NC}"
-        for dir in "${conflicting[@]}"; do
-            echo -e "${ERROR}$dir${NC}"
+    if [ ${#notPushed[@]} -ne 0 ]; then
+        echo -e "${NOT_PUSHED}The following directories contain changes that were commited but not yet pushed:${NC}"
+        for dir in "${notPushed[@]}"; do
+            echo -e "${NOT_PUSHED}$dir${NC}"
         done
     fi
 }
