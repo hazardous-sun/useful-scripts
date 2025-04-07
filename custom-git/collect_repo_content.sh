@@ -16,7 +16,7 @@ output_file="${1:-content}"
 
 getIgnoredFiles() {    
     if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        echo -e "${ERROR}Error: Not in a git repository${NC}" >&2
+        echo -e "${ERROR}error: not in a git repository${NC}" >&2
         exit 1
     fi
     
@@ -56,6 +56,8 @@ processDirectory() {
     local dir="$1"
     local indent="$2"
     local first_file=true
+   
+    echo -e "${INFO}Processing ${WARNING}'$dir'${INFO}...${NC}"
     
     # Skip if we've already processed this directory
     if [[ -n "${processed_dirs[$dir]}" ]]; then
