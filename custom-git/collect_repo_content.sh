@@ -12,7 +12,8 @@ NC="\033[0m"
 # Initialize variables
 declare -A processed_dirs  # Track processed directories to avoid duplicates
 ignoredFiles=()
-manuallyIgnoredFiles=()     # will be populated from CLI and default ignores
+manuallyIgnoredFiles=()     # full path ignores from CLI and defaults
+ignoreAllFiles=()           # ignore by filename regardless of path
 output_file="content"
 
 parse_args() {
@@ -31,6 +32,15 @@ parse_args() {
                     shift 2
                 else
                     echo -e "${ERROR}error: --ignore requires a filename argument${NC}" >&2
+                    exit 1
+                fi
+                ;;
+            --ignore-all)
+                if [[ -n "$2" ]]; then
+                    ignoreAllFiles+=("$2")
+                    shift 2
+                else
+                    echo -e "${ERROR}error: --ignore-all requires a filename argument${NC}" >&2
                     exit 1
                 fi
                 ;;
@@ -87,11 +97,22 @@ isIgnored() {
         return 0
     fi
 
+    # Check if basename is in ignoreAllFiles
+    local basefile
+    basefile=$(basename "$file")
+    for name in "${ignoreAllFiles[@]}"; do
+        if [[ "$basefile" == "$name" ]]; then
+            return 0
+        fi
+    done
+
+    # Check full path ignores
     for ignored in "${ignoredFiles[@]}"; do
         if [[ "$file" == "$ignored" ]]; then
             return 0
         fi
     done
+
     return 1
 }
 
@@ -154,9 +175,15 @@ main() {
 
     getIgnoredFiles
 
-    if [ ${#ignoredFiles[@]} -ne 0 ]; then
+    if [ ${#ignoredFiles[@]} -ne 0 ] || [ ${#ignoreAllFiles[@]} -ne 0 ]; then
         echo -e "${WARNING}Ignoring the following files:${NC}"
-        printf '%s\n' "${ignoredFiles[@]}"
+        if [ ${#ignoredFiles[@]} -ne 0 ]; then
+            printf '%s\n' "${ignoredFiles[@]}"
+        fi
+        if [ ${#ignoreAllFiles[@]} -ne 0 ]; then
+            echo "By filename (ignore-all):"
+            printf '%s\n' "${ignoreAllFiles[@]}"
+        fi
         echo
     fi
 
