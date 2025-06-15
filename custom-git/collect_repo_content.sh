@@ -14,7 +14,7 @@ declare -A processed_dirs  # Track processed directories to avoid duplicates
 ignoredFiles=()
 manuallyIgnoredFiles=()     # full path ignores from CLI and defaults
 ignoreAllFiles=()           # ignore by filename regardless of path
-output_file="content"
+output_file="content.json"
 
 parse_args() {
     # Default output file
