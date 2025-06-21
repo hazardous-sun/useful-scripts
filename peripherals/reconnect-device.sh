@@ -24,16 +24,16 @@ reconnectDevice() {
     local device_mac="$1"
     
     if ! bluetoothctl disconnect "$device_mac"; then
-        echo -e "${ERROR}Failed to disconnect $device_mac${NC}" >&2
+        echo -e "${ERROR}❌ error: Failed to disconnect $device_mac${NC}" >&2
         return 1
     fi
     
     if ! bluetoothctl connect "$device_mac"; then
-        echo -e "${ERROR}Failed to connect $device_mac${NC}" >&2
+        echo -e "${ERROR}❌ error: Failed to connect $device_mac${NC}" >&2
         return 1
     fi
     
-    echo "Successfully reconnected $device_mac"
+    echo "✅ Successfully reconnected $device_mac"
 }
 
 getDeviceMac() {
