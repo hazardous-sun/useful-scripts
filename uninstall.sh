@@ -13,14 +13,14 @@ DEFAULT_INSTALL_PATH="/opt/useful-scripts/"
 # Check if script is run with sudo
 checkPermissions() {
     if [ "$(id -u)" != "0" ]; then
-        echo -e "${RED}Please run the script with sudo${NC}"
+        echo -e "${RED}⚠️ Please run the script with sudo${NC}"
         exit 1
     fi
 }
 
 # Get installation directory from user
 getInstallPath() {
-    echo -e "${CYAN}Enter the directory where scripts are installed (leave blank for default '${DEFAULT_INSTALL_PATH}'):${NC}"
+    echo -e "${CYAN}ℹ️ Enter the directory where scripts are installed (leave blank for default '${DEFAULT_INSTALL_PATH}'):${NC}"
     read -r -p "> " userInput
 
     if [[ -z "$userInput" ]]; then
@@ -31,10 +31,10 @@ getInstallPath() {
         INSTALL_PATH="$userInput"
     fi
 
-    echo -e "${CYAN}Using installation path: ${YELLOW}'${INSTALL_PATH}'${NC}"
+    echo -e "${CYAN}ℹ️ Using installation path: ${YELLOW}'${INSTALL_PATH}'${NC}"
     
     if [ ! -d "$INSTALL_PATH" ]; then
-        echo -e "${RED}Error: Directory '$INSTALL_PATH' does not exist${NC}"
+        echo -e "${RED}❌ error: Directory '$INSTALL_PATH' does not exist${NC}"
         exit 1
     fi
 }
@@ -45,7 +45,7 @@ selectScriptsToRemove() {
     local options=()
     local count=1
 
-    echo -e "${CYAN}Finding installed scripts...${NC}"
+    echo -e "${CYAN}🔄 Finding installed scripts...${NC}"
     
     # Find all .sh files in installation directory
     while IFS= read -r -d $'\0' script; do
@@ -56,7 +56,7 @@ selectScriptsToRemove() {
     done < <(find "$INSTALL_PATH" -type f -name "*.sh" -print0)
 
     if [ ${#scripts[@]} -eq 0 ]; then
-        echo -e "${YELLOW}No scripts found in '$INSTALL_PATH'${NC}"
+        echo -e "${YELLOW}ℹ️ No scripts found in '$INSTALL_PATH'${NC}"
         exit 0
     fi
 
@@ -64,14 +64,14 @@ selectScriptsToRemove() {
     options+=("$count" "All scripts" "off")
 
     # Show selection dialog
-    echo -e "${CYAN}Select scripts to uninstall:${NC}"
+    echo -e "${CYAN}ℹ️ Select scripts to uninstall:${NC}"
     choices=$(whiptail --title "Script Uninstaller" --checklist \
         "Choose scripts to uninstall:" 20 60 10 \
         "${options[@]}" 3>&1 1>&2 2>&3) || exit
 
     # Process user choices
     if [[ -z "$choices" ]]; then
-        echo -e "${YELLOW}No scripts selected for removal. Exiting.${NC}"
+        echo -e "${YELLOW}ℹ️ No scripts selected for removal. Exiting.${NC}"
         exit 0
     fi
 
@@ -101,23 +101,23 @@ removeScripts() {
         script_name=$(basename "$script")
         symlink_path="/usr/bin/$script_name"
 
-        echo -e "${CYAN}Removing $script_name...${NC}"
+        echo -e "${CYAN}ℹ️ Removing $script_name...${NC}"
         
         # Remove script file
         rm -f "$script"
         if [[ $? -eq 0 ]]; then
-            echo -e "${GREEN}Removed: $script${NC}"
+            echo -e "${GREEN}✅ Removed: $script${NC}"
         else
-            echo -e "${RED}Failed to remove: $script${NC}"
+            echo -e "${RED}❌ error: Failed to remove: $script${NC}"
         fi
 
         # Remove symlink if exists
         if [[ -L "$symlink_path" ]]; then
             rm -f "$symlink_path"
             if [[ $? -eq 0 ]]; then
-                echo -e "${GREEN}Removed symlink: $symlink_path${NC}"
+                echo -e "${GREEN}✅ Removed symlink: $symlink_path${NC}"
             else
-                echo -e "${RED}Failed to remove symlink: $symlink_path${NC}"
+                echo -e "${RED}❌ error: Failed to remove symlink: $symlink_path${NC}"
             fi
         fi
     done
@@ -129,7 +129,7 @@ main() {
     selectScriptsToRemove
     removeScripts
     
-    echo -e "${GREEN}Uninstallation complete${NC}"
+    echo -e "${GREEN}✅ Uninstallation complete${NC}"
 }
 
 main
