@@ -1,11 +1,8 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
-# Checks if there are uncommitted changes in the repositories inside a "Projects" directory that
-# the user specify.
-# If no directory path is passed, the script will look for git repositories inside the 
-# "$HOME/Projects/" directory.
+# Checks if there are uncommitted changes in the repositories inside a "$PROJECTS" directory, 
+# or the path that the user specify. 
 
-PROJECTS="$HOME/Projects/"
 WARNING="\033[33m"
 ERROR="\033[31m"
 NOT_PUSHED="\033[38;5;190m"
@@ -17,14 +14,14 @@ printMissingActions() {
     local notPushed=("${!2}")
 
     if [ ${#uncommitted[@]} -ne 0 ]; then
-        echo -e "${WARNING}The following directories contain uncommitted changes:${NC}"
+        echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}"
         for dir in "${uncommitted[@]}"; do
             echo -e "${WARNING}$dir${NC}"
         done
     fi
 
     if [ ${#notPushed[@]} -ne 0 ]; then
-        echo -e "${NOT_PUSHED}The following directories contain changes that were commited but not yet pushed:${NC}"
+        echo -e "${NOT_PUSHED}📤 The following directories contain changes that were commited but not yet pushed:${NC}"
         for dir in "${notPushed[@]}"; do
             echo -e "${NOT_PUSHED}$dir${NC}"
         done
@@ -60,11 +57,11 @@ setProjectsDir() {
     
         # Check if $PROJECTS directory exists
         if [ ! -d "$PROJECTS" ]; then
-            echo -e "${ERROR}error: directory $PROJECTS does not exist${NC}"
+            echo -e "${ERROR}❌ error: directory $PROJECTS does not exist${NC}"
             printUsage
             exit 1
         fi
-        echo -e "${INFO}Projects directory set to '$PROJECTS'${NC}"
+        echo -e "${INFO}✅ Projects directory set to '$PROJECTS'${NC}"
     fi
 }
 
@@ -73,7 +70,7 @@ main() {
     setProjectsDir "$@"
 
     # CD into Projects directory
-    cd "$PROJECTS" || { echo -e "${ERROR}Failed to cd to $PROJECTS${NC}"; exit 1; }
+    cd "$PROJECTS" || { echo -e "${ERROR}❌ error: failed to cd to $PROJECTS${NC}"; exit 1; }
 
     # Variables for controlling errors
     uncommittedDirectories=()
@@ -82,10 +79,10 @@ main() {
     # Iterate over directories inside $PROJECTS
     for dir in */; do
         [ -d "$dir" ] || continue  # Skip if not a directory
-        echo -e "${INFO}Checking $dir${NC}"
+        echo -e "${INFO}🧪 Checking $dir${NC}"
         
         # CD into dir
-        cd "$dir" || { echo -e "${ERROR}Failed to enter $dir${NC}"; continue; }
+        cd "$dir" || { echo -e "${ERROR}❌ error: failed to enter $dir${NC}"; continue; }
   
         # Check if $dir is a git directory 
         if git rev-parse --is-inside-work-tree &>/dev/null; then
@@ -95,7 +92,7 @@ main() {
                 2) directoriesConflicting+=("$(pwd)") ;;
             esac
         else
-            echo -e "${WARNING}$dir is not a git repository${NC}"
+            echo -e "${WARNING}📁 $dir is not a git repository${NC}"
         fi
         
         # Return to Projects directory
