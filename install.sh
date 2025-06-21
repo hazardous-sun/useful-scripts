@@ -16,7 +16,7 @@ removePreviousVersion() {
     local script_path="$1"
     local script_name="$(basename "$script_path")"
     
-    echo -e "${CYAN}Removing previous version of $script_name...${NC}"
+    echo -e "${CYAN}ℹ️ Removing previous version of $script_name...${NC}"
     rm -f "$script_path"
     rm -f "/usr/bin/$script_name"
 }
@@ -32,7 +32,7 @@ installScript() {
     local dest_path="$dest_dir/$script_name"
     
     removePreviousVersion "$dest_path"
-    echo -e "${CYAN}Installing $script_name to $dest_dir${NC}"
+    echo -e "${CYAN}ℹ️ Installing $script_name to $dest_dir${NC}"
     
     # Create destination directory if it doesn't exist
     mkdir -p "$dest_dir"
@@ -60,12 +60,12 @@ greetings() {
         destinyPath = $userInput
     fi
 
-    echo -e "${CYAN}Installation path set to: ${YELLOW}'${destinyPath}'${NC}"
+    echo -e "${CYAN}ℹ️ Installation path set to: ${YELLOW}'${destinyPath}'${NC}"
 }
 
 checkPermissions() {
     if [ "$(id -u)" != "0" ]; then
-        echo -e "${RED}Please run the script with sudo${NC}"
+        echo -e "${RED}⚠️ Please run the script with sudo${NC}"
         exit 1
     fi
 }
@@ -73,7 +73,7 @@ checkPermissions() {
 main() {
     checkPermissions
     greetings
-    echo -e "${CYAN}Updating scripts in /opt${NC}"
+    echo -e "${CYAN}🔄 Updating scripts in /opt${NC}"
     
     # Process each directory and file
     find . -type f -name "*.sh" ! -name "install.sh" | while read -r script_path; do
@@ -83,11 +83,11 @@ main() {
         # Get destination directory by removing the script filename
         dest_dir="${destinyPath}$(dirname "$relative_path")"
         
-        echo -e "${CYAN}Installing ${YELLOW}'$script_path'${NC}"
+        echo -e "${CYAN}ℹ️ Installing ${YELLOW}'$script_path'${NC}"
         installScript "$script_path" "$dest_dir"
     done
     
-    echo -e "${GREEN}Installation complete${NC}"
+    echo -e "${GREEN}✅ Installation complete${NC}"
 }
 
 main
