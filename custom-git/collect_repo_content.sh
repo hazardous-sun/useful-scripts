@@ -31,7 +31,7 @@ parse_args() {
                     manuallyIgnoredFiles+=("$2")
                     shift 2
                 else
-                    echo -e "${ERROR}error: --ignore requires a filename argument${NC}" >&2
+                    echo -e "${ERROR}❌ error: --ignore requires a filename argument${NC}" >&2
                     exit 1
                 fi
                 ;;
@@ -40,12 +40,12 @@ parse_args() {
                     ignoreAllFiles+=("$2")
                     shift 2
                 else
-                    echo -e "${ERROR}error: --ignore-all requires a filename argument${NC}" >&2
+                    echo -e "${ERROR}❌ error: --ignore-all requires a filename argument${NC}" >&2
                     exit 1
                 fi
                 ;;
             *)
-                echo -e "${ERROR}error: unknown argument: $1${NC}" >&2
+                echo -e "${ERROR}❌ error: unknown argument: $1${NC}" >&2
                 exit 1
                 ;;
         esac
@@ -55,7 +55,7 @@ parse_args() {
 getIgnoredFiles() {
     # Check if inside a Git repository
     if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        echo -e "${ERROR}error: not in a git repository${NC}" >&2
+        echo -e "${ERROR}❌ error: not in a git repository${NC}" >&2
         exit 1
     fi
 
@@ -121,7 +121,7 @@ processDirectory() {
     local indent="$2"
     local first_file=true
 
-    echo -e "${INFO}Processing ${WARNING}'$dir'${INFO}...${NC}"
+    echo -e "${INFO}🔄 Processing ${WARNING}'$dir'${INFO}...${NC}"
 
     # Skip if we've already processed this directory
     if [[ -n "${processed_dirs[$dir]}" ]]; then
@@ -176,7 +176,7 @@ main() {
     getIgnoredFiles
 
     if [ ${#ignoredFiles[@]} -ne 0 ] || [ ${#ignoreAllFiles[@]} -ne 0 ]; then
-        echo -e "${WARNING}Ignoring the following files:${NC}"
+        echo -e "${WARNING}⚠️ Ignoring the following files:${NC}"
         if [ ${#ignoredFiles[@]} -ne 0 ]; then
             printf '%s\n' "${ignoredFiles[@]}"
         fi
@@ -187,14 +187,14 @@ main() {
         echo
     fi
 
-    echo -e "${INFO}Creating output file: $output_file${NC}"
+    echo -e "${INFO}ℹ️ Creating output file: $output_file${NC}"
     echo "{" > "$output_file"
 
     processDirectory "." ""
 
     echo -e "\n}" >> "$output_file"
 
-    echo -e "${INFO}Repository content successfully saved to $output_file${NC}"
+    echo -e "${INFO}✅ Repository content successfully saved to $output_file${NC}"
 }
 
 main "$@"
