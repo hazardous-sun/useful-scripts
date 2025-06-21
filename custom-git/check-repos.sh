@@ -101,7 +101,7 @@ main() {
 
     # After processing all $PROJECTS subdirectories, check the $CONFIG directory
     if [ -d "$CONFIG" ]; then
-        echo -e "${INFO}🔍 Checking $CONFIG: $CONFIG${NC}"
+        echo -e "${INFO}🔍 Checking $CONFIG${NC}"
         cd "$CONFIG" || exit
     
         if [[ -d .git ]]; then
