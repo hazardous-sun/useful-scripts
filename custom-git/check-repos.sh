@@ -13,8 +13,8 @@ printMissingActions() {
     local uncommitted=("${!1}")
     local notPushed=("${!2}")
 
-    if [ ${#uncommitted[@]} -ne 0 ]; then
-        echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}"
+    if [ ${#uncommitted[@]} -ne 0 ]; then 
+        echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}" 
         for dir in "${uncommitted[@]}"; do
             echo -e "${WARNING}$dir${NC}"
         done
@@ -79,7 +79,7 @@ main() {
     # Iterate over directories inside $PROJECTS
     for dir in */; do
         [ -d "$dir" ] || continue  # Skip if not a directory
-        echo -e "${INFO}🧪 Checking $dir${NC}"
+        echo -e "${INFO}🔍 Checking $dir${NC}"
         
         # CD into dir
         cd "$dir" || { echo -e "${ERROR}❌ error: failed to enter $dir${NC}"; continue; }
@@ -98,6 +98,24 @@ main() {
         # Return to Projects directory
         cd ..
     done
+
+    # After processing all $PROJECTS subdirectories, check the $CONFIG directory
+    if [ -d "$CONFIG" ]; then
+        echo -e "${INFO}🔍 Checking $CONFIG: $CONFIG${NC}"
+        cd "$CONFIG" || exit
+    
+        if [[ -d .git ]]; then
+            # Check for uncommitted changes
+            if [[ -n $(git status --porcelain) ]]; then
+                uncommitted+=("$CONFIG")
+            fi
+            
+            # Check for commits not pushed
+            if [[ -n $(git log --branches --not --remotes) ]]; then
+                notPushed+=("$CONFIG")
+            fi
+        fi
+    fi
 
     printMissingActions uncommittedDirectories[@] directoriesConflicting[@]
     
