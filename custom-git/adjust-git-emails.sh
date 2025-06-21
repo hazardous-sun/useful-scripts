@@ -11,9 +11,9 @@ NC="\033[0m"
 
 main() {
     # Warn the user about potential risks
-    echo -e "${RED}WARNING: This will rewrite Git history, changing ALL commit authors/emails.${NC}"
-    echo -e "${RED}This may cause conflicts, and the only way to undo it may be to reclone the repo.${NC}"
-    echo -e "${RED}Are you ABSOLUTELY sure you want to proceed? (y/N)${NC}"
+    echo -e "${RED}⚠️ WARNING: This will rewrite Git history, changing ALL commit authors/emails.${NC}⚠️"
+    echo -e "${RED}⚠️ This may cause conflicts, and the only way to undo it may be to reclone the repo.${NC}⚠️"
+    echo -e "${RED}⚠️ Are you ABSOLUTELY sure you want to proceed? (y/N)${NC}⚠️"
 
     # Read user input (case-insensitive)
     read -r -p "> " user_input
@@ -21,14 +21,14 @@ main() {
 
     # Only proceed on explicit "y" or "yes" (case-insensitive)
     if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
-        echo "Starting rebase to reset authors..."
+        echo "🔄 Starting rebase to reset authors..."
         git rebase -r --root --exec "git commit --amend --no-edit --reset-author" || {
-            echo -e "${RED}Rebase failed! Check Git status and resolve conflicts.${NC}" >&2
+            echo -e "${RED}❌ error: Rebase failed! Check Git status and resolve conflicts.${NC}" >&2
             exit 1
         }
-        echo "Successfully updated all commits."
+        echo "✅ Successfully updated all commits."
     else
-        echo "Aborted. No changes were made."
+        echo "✅ Aborted. No changes were made."
     fi
 }
 
