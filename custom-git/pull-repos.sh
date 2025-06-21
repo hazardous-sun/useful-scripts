@@ -25,7 +25,7 @@ printMissingActions() {
     if [ ${#conflicting[@]} -ne 0 ]; then
         echo -e "${ERROR}The following directories had conflicts when pulling:${NC}"
         for dir in "${conflicting[@]}"; do
-            echo "${ERROR}$dir${NC}"
+            echo -e "${ERROR}$dir${NC}"
         done
     fi
 }
@@ -103,6 +103,21 @@ main() {
         # Return to Projects directory
         cd ..
     done
+    
+    echo -e "${INFO}Checking $CONFIG${NC}"    
+    # CD into dir
+    cd "$CONFIG" || { echo -e "${ERROR}error: failed to enter $CONFIG${NC}"; }
+    
+    # Check if $dir is a git directory 
+    if git rev-parse --is-inside-work-tree &>/dev/null; then
+        pullChanges
+        case $? in
+            1) uncommittedDirectories+=("$(pwd)") ;;
+            2) directoriesConflicting+=("$(pwd)") ;;
+        esac
+    else
+        echo -e "${WARNING}$CONFIG is not a git repository${NC}"
+    fi
 
     printMissingActions uncommittedDirectories[@] directoriesConflicting[@]
     
