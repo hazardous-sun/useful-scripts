@@ -16,21 +16,21 @@ printStatus() {
     local failed=("${!3}")
 
     if [ ${#uncommitted[@]} -ne 0 ]; then
-        echo -e "${WARNING}The following directories contain uncommitted changes:${NC}"
+        echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}"
         for dir in "${uncommitted[@]}"; do
             echo -e "${WARNING}$dir${NC}"
         done
     fi
 
     if [ ${#unpushed[@]} -ne 0 ]; then
-        echo -e "${WARNING}The following directories have commits not yet pushed:${NC}"
+        echo -e "${WARNING}📤 The following directories have commits not yet pushed:${NC}"
         for dir in "${unpushed[@]}"; do
             echo -e "${WARNING}$dir${NC}"
         done
     fi
 
     if [ ${#failed[@]} -ne 0 ]; then
-        echo -e "${ERROR}Failed to push changes in the following directories:${NC}"
+        echo -e "${ERROR}❌ error: Failed to push changes in the following directories:${NC}"
         for dir in "${failed[@]}"; do
             echo -e "${ERROR}$dir${NC}"}
         done
@@ -93,11 +93,11 @@ setProjectsDir() {
     
         # Check if $PROJECTS directory exists
         if [ ! -d "$PROJECTS" ]; then
-            echo -e "${ERROR}error: directory $PROJECTS does not exist${NC}"
+            echo -e "${ERROR}❌ error: directory $PROJECTS does not exist${NC}"
             printUsage
             exit 1
         fi
-        echo "${INFO}Projects directory set to '$PROJECTS'${NC}"
+        echo "${INFO}ℹ️ Projects directory set to '$PROJECTS'${NC}"
     fi
 }
 
@@ -106,7 +106,7 @@ main() {
     setProjectsDir "$@"
 
     # CD into Projects directory
-    cd "$PROJECTS" || { echo -e "${ERROR}Failed to cd to $PROJECTS${NC}"; exit 1; }
+    cd "$PROJECTS" || { echo -e "${ERROR}❌ error: Failed to cd to $PROJECTS${NC}"; exit 1; }
 
     # Variables for tracking status
     uncommittedDirectories=()
@@ -116,10 +116,10 @@ main() {
     # Iterate over directories inside $PROJECTS
     for dir in */; do
         [ -d "$dir" ] || continue  # Skip if not a directory
-        echo -e "${INFO}Checking $dir${NC}"
+        echo -e "${INFO}🧪 Checking $dir${NC}"
         
         # CD into dir
-        cd "$dir" || { echo -e "${ERROR}Failed to enter $dir${NC}"; continue; }
+        cd "$dir" || { echo -e "${ERROR}❌ error: Failed to enter $dir${NC}"; continue; }
   
         # Check if $dir is a git directory 
         if git rev-parse --is-inside-work-tree &>/dev/null; then
@@ -134,7 +134,7 @@ main() {
                     ;;
             esac
         else
-            echo -e "${WARNING}$dir is not a git repository${NC}"
+            echo -e "${WARNING}📁 $dir is not a git repository${NC}"
         fi
         
         # Return to Projects directory
