@@ -14,7 +14,7 @@ main() {
     
     # Check if the prefix contains invalid filename characters
     if [[ "$prefix" =~ [/\\:\*\?""<>|] ]]; then
-        echo "Error: Prefix contains invalid filename characters." >&2
+        echo "❌ error: Prefix contains invalid filename characters." >&2
         exit 1
     fi
     
@@ -30,18 +30,18 @@ main() {
             if [[ "$file" != "${prefix}"* ]]; then
                 # Check if target filename already exists
                 if [ -e "${prefix}${file}" ]; then
-                    echo "Error: '${prefix}${file}' already exists. Skipping '$file'." >&2
+                    echo "❌ error: '${prefix}${file}' already exists. Skipping '$file'." >&2
                     continue
                 fi
                 
                 # Rename the file
                 if mv -- "$file" "${prefix}${file}"; then
-                    echo "Renamed '$file' to '${prefix}${file}'"
+                    echo "✅ Renamed '$file' to '${prefix}${file}'"
                 else
-                    echo "Error: Failed to rename '$file'." >&2
+                    echo "❌ error: Failed to rename '$file'." >&2
                 fi
             else
-                echo "Skipping '$file' (already starts with '$prefix')"
+                echo "ℹ️ Skipping '$file' (already starts with '$prefix')"
             fi
         fi
     done
