@@ -14,41 +14,35 @@ printMissingActions() {
     local noUpstream=("${!2}")
     local notPushed=("${!3}")
     
-    local COUNT=1
     if [ ${#uncommitted[@]} -ne 0 ]; then 
         echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}" 
         for dir in "${uncommitted[@]}"; do
-            echo -e "${WARNING}$COUNT. $dir${NC}"
-            ((COUNT++))
+            echo -e "${WARNING}$dir${NC}"
         done
     fi
     
-    COUNT=1
     if [ ${#noUpstream[@]} -ne 0 ]; then
         echo -e "${ERROR}🚫 The following directories do not have an upstream branch set:${NC}"
         for dir in "${noUpstream[@]}"; do
-            echo -e "${ERROR}$COUNT. $dir${NC}"
+            echo -e "${ERROR}$dir${NC}"
             
             # Get current branch name
             branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD)
             
             # Check if a remote branch with the same name exists
             if git -C "$dir" show-ref --quiet "refs/remotes/origin/$branch"; then
-                echo -e "${WARNING}$COUNT.1 ⚠️ Remote branch 'origin/$branch' exists. To link it, run:${NC}"
+                echo -e "${WARNING}⚠️ Remote branch 'origin/$branch' exists. To link it, run:${NC}"
                 echo -e "${WARNING}\tgit -C \"$dir\" branch --set-upstream-to=origin/$branch $branch${NC}"
             else
-                echo -e "${ERROR}    $COUNT.1 ❌ No matching remote branch found for '$branch'.${NC}"
+                echo -e "${ERROR}❌ No matching remote branch found for '$branch'.${NC}"
             fi
-            ((COUNT++))
         done
     fi
 
-    COUNT=1
     if [ ${#notPushed[@]} -ne 0 ]; then
         echo -e "${NOT_PUSHED}📤 The following directories contain changes that were commited but not yet pushed:${NC}"
         for dir in "${notPushed[@]}"; do
-            echo -e "${NOT_PUSHED}$COUNT. $dir${NC}"
-            ((COUNT++))
+            echo -e "${NOT_PUSHED}$dir${NC}"
         done
     fi
 }
