@@ -31,8 +31,8 @@ printMissingActions() {
             
             # Check if a remote branch with the same name exists
             if git -C "$dir" show-ref --quiet "refs/remotes/origin/$branch"; then
-                echo -e "${WARNING}⚠️ Remote branch 'origin/$branch' exists. To link it, run:${NC}"
-                echo -e "${WARNING}\tgit -C \"$dir\" branch --set-upstream-to=origin/$branch $branch${NC}"
+                echo -e "${INFO}ℹ️ Remote branch 'origin/$branch' exists. To link it, run:${NC}"
+                echo -e "${INFO}\tgit -C \"$dir\" branch --set-upstream-to=origin/$branch $branch${NC}"
             else
                 echo -e "${ERROR}❌ No matching remote branch found for '$branch'.${NC}"
             fi
