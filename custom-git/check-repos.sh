@@ -11,19 +11,44 @@ NC="\033[0m"
 
 printMissingActions() {
     local uncommitted=("${!1}")
-    local notPushed=("${!2}")
-
+    local noUpstream=("${!2}")
+    local notPushed=("${!3}")
+    
+    local COUNT=1
     if [ ${#uncommitted[@]} -ne 0 ]; then 
         echo -e "${WARNING}🟡 The following directories contain uncommitted changes:${NC}" 
         for dir in "${uncommitted[@]}"; do
-            echo -e "${WARNING}$dir${NC}"
+            echo -e "${WARNING}$COUNT. $dir${NC}"
+            ((COUNT++))
+        done
+    fi
+    
+    COUNT=1
+    if [ ${#noUpstream[@]} -ne 0 ]; then
+        echo -e "${ERROR}🚫 The following directories do not have an upstream branch set:${NC}"
+        for dir in "${noUpstream[@]}"; do
+            echo -e "${ERROR}$COUNT. $dir${NC}"
+            
+            # Get current branch name
+            branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD)
+            
+            # Check if a remote branch with the same name exists
+            if git -C "$dir" show-ref --quiet "refs/remotes/origin/$branch"; then
+                echo -e "${WARNING}$COUNT.1 ⚠️ Remote branch 'origin/$branch' exists. To link it, run:${NC}"
+                echo -e "${WARNING}\tgit -C \"$dir\" branch --set-upstream-to=origin/$branch $branch${NC}"
+            else
+                echo -e "${ERROR}    $COUNT.1 ❌ No matching remote branch found for '$branch'.${NC}"
+            fi
+            ((COUNT++))
         done
     fi
 
+    COUNT=1
     if [ ${#notPushed[@]} -ne 0 ]; then
         echo -e "${NOT_PUSHED}📤 The following directories contain changes that were commited but not yet pushed:${NC}"
         for dir in "${notPushed[@]}"; do
-            echo -e "${NOT_PUSHED}$dir${NC}"
+            echo -e "${NOT_PUSHED}$COUNT. $dir${NC}"
+            ((COUNT++))
         done
     fi
 }
@@ -35,9 +60,14 @@ pullChanges() {
         return 1
     fi
 
+    # Check if upstream is set
+    if ! git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null; then
+        return 2 
+    fi
+
     # Check for changes commited but not yet pushed
     if [ -n "$(git cherry -v)" ]; then
-        return 2
+        return 3
     fi
     
     return 0
@@ -74,6 +104,7 @@ main() {
 
     # Variables for controlling errors
     uncommittedDirectories=()
+    noUpstreamRepos=()
     directoriesConflicting=()
 
     # Iterate over directories inside $PROJECTS
@@ -89,7 +120,8 @@ main() {
             pullChanges
             case $? in
                 1) uncommittedDirectories+=("$(pwd)") ;;
-                2) directoriesConflicting+=("$(pwd)") ;;
+                2) noUpstreamRepos+=("$(pwd)") ;;
+                3) directoriesConflicting+=("$(pwd)") ;;
             esac
         else
             echo -e "${WARNING}📁 $dir is not a git repository${NC}"
@@ -117,7 +149,7 @@ main() {
         fi
     fi
 
-    printMissingActions uncommittedDirectories[@] directoriesConflicting[@]
+    printMissingActions uncommittedDirectories[@] noUpstreamRepos[@] directoriesConflicting[@]
     
     exit 0
 }
