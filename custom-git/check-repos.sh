@@ -126,21 +126,19 @@ main() {
     done
 
     # After processing all $PROJECTS subdirectories, check the $CONFIG directory
-    if [ -d "$CONFIG" ]; then
-        echo -e "${INFO}🔍 Checking $CONFIG${NC}"
-        cd "$CONFIG" || exit
+    echo -e "${INFO}🔍 Checking $CONFIG${NC}"
+    cd "$CONFIG" 
     
-        if [[ -d .git ]]; then
-            # Check for uncommitted changes
-            if [[ -n $(git status --porcelain) ]]; then
-                uncommitted+=("$CONFIG")
-            fi
-            
-            # Check for commits not pushed
-            if [[ -n $(git log --branches --not --remotes) ]]; then
-                notPushed+=("$CONFIG")
-            fi
-        fi
+    # Check if $dir is a git directory 
+    if git rev-parse --is-inside-work-tree &>/dev/null; then
+        pullChanges
+        case $? in
+            1) uncommittedDirectories+=("$(pwd)") ;;
+            2) noUpstreamRepos+=("$(pwd)") ;;
+            3) directoriesConflicting+=("$(pwd)") ;;
+        esac
+    else
+        echo -e "${WARNING}📁 $dir is not a git repository${NC}"
     fi
 
     printMissingActions uncommittedDirectories[@] noUpstreamRepos[@] directoriesConflicting[@]
